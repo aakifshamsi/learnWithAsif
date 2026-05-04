@@ -1,0 +1,40 @@
+name = "elections-worker"
+main = "src/index.ts"
+compatibility_date = "2024-05-20"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "elections-db"
+database_id = "REPLACE_AFTER_wrangler_d1_create"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_AFTER_wrangler_kv_create"
+preview_id = "REPLACE_AFTER_wrangler_kv_create_preview"
+
+[[r2_buckets]]
+binding = "REPORTS_BUCKET"
+bucket_name = "elections-reports"
+
+[ai]
+binding = "AI"
+
+[[durable_objects.bindings]]
+name = "ELECTION_ROOM"
+class_name = "ElectionRoom"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ElectionRoom"]
+
+[triggers]
+crons = ["*/30 * * * * *"]
+
+[vars]
+ENVIRONMENT = "production"
+ECI_FEED_URL = "https://results.eci.gov.in/ResultAcGenMay2024/index.htm"
+
+# Secrets (set via: wrangler secret put <NAME>)
+# CF_ACCESS_TEAM_DOMAIN — e.g. yourteam.cloudflareaccess.com

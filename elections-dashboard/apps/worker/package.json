@@ -1,0 +1,21 @@
+{
+  "name": "@elections/worker",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "migrate:local": "wrangler d1 migrations apply elections-db --local",
+    "migrate:remote": "wrangler d1 migrations apply elections-db --remote"
+  },
+  "dependencies": {
+    "@elections/shared": "workspace:*",
+    "hono": "^4.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240524.0",
+    "typescript": "^5.4.5",
+    "wrangler": "^3.57.0"
+  }
+}
