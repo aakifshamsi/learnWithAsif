@@ -1,0 +1,73 @@
+name: Deploy aakif.sham.si → GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - "claude/elections-dashboard-ai-*"
+    paths:
+      - "portfolio/**"
+      - ".github/workflows/deploy-github-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build portfolio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install dependencies
+        working-directory: portfolio
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Typecheck
+        working-directory: portfolio
+        run: pnpm typecheck
+
+      - name: Build
+        working-directory: portfolio
+        run: pnpm build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: portfolio/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check GitHub Pages is enabled
+        run: |
+          echo "::notice::If this step fails with a 'Pages not configured' error:"
+          echo "::notice::Go to repo Settings → Pages → Source → GitHub Actions and save."
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
