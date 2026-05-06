@@ -1,0 +1,25 @@
+# Cloudflare Tunnel config
+# Place at ~/.cloudflared/config.yml after running: cloudflared tunnel create jarvis-home
+# Then: cloudflared tunnel route dns jarvis-home <subdomain>.sham.si
+
+tunnel: jarvis-home        # replace with your tunnel ID after creation
+credentials-file: /home/aakif/.cloudflared/jarvis-home.json
+
+ingress:
+  - hostname: ai.sham.si
+    service: http://localhost:3000       # Open WebUI
+
+  - hostname: cloud.sham.si
+    service: http://localhost:8080       # Nextcloud
+
+  - hostname: git.sham.si
+    service: http://localhost:3001       # Gitea
+
+  - hostname: status.sham.si
+    service: http://localhost:3002       # Uptime Kuma
+
+  - hostname: proxy.sham.si
+    service: http://localhost:81         # Nginx Proxy Manager UI
+
+  # Catch-all (required by cloudflared)
+  - service: http_status:404

@@ -1,0 +1,54 @@
+name: Deploy sham.si root
+
+on:
+  push:
+    branches:
+      - main
+      - "claude/elections-dashboard-ai-*"
+    paths:
+      - "sham-si/**"
+      - ".github/workflows/deploy-sham-si.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & deploy sham.si to Cloudflare Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install
+        working-directory: sham-si
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        working-directory: sham-si
+        run: pnpm typecheck
+
+      - name: Build
+        working-directory: sham-si
+        run: pnpm build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: shamsi-root
+          directory: sham-si/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name == 'main' && 'main' || github.ref_name }}
+          wranglerVersion: "3"

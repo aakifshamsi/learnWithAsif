@@ -1,0 +1,148 @@
+name: jarvis-core
+
+services:
+
+  # ── Open WebUI — primary AI chat interface (voice + RAG) ───────────────
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: jarvis-open-webui
+    restart: unless-stopped
+    ports:
+      - "${PORT_WEBUI:-3000}:8080"
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host-gateway:11434}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - ENABLE_SIGNUP=${WEBUI_ENABLE_SIGNUP:-false}
+      - VECTOR_DB=qdrant
+      - QDRANT_URL=http://qdrant:6333
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - AUDIO_STT_ENGINE=openai
+      - AUDIO_STT_OPENAI_API_BASE_URL=http://whisper:9000/v1
+      - AUDIO_STT_OPENAI_API_KEY=sk-local
+    volumes:
+      - open-webui-data:/app/backend/data
+    depends_on:
+      - qdrant
+    extra_hosts:
+      - host-gateway:host-gateway
+
+  # ── Qdrant — vector database for memory and RAG ─────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: jarvis-qdrant
+    restart: unless-stopped
+    ports:
+      - "${PORT_QDRANT:-6333}:6333"
+    environment:
+      - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+  # ── Whisper API — speech-to-text server ─────────────────────────────────
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: jarvis-whisper
+    restart: unless-stopped
+    ports:
+      - "${PORT_WHISPER:-9090}:9000"
+    environment:
+      - ASR_MODEL=${WHISPER_MODEL:-base.en}
+      - ASR_ENGINE=faster_whisper
+    volumes:
+      - whisper-models:/root/.cache/huggingface
+
+  # ── Nextcloud — unified file storage ────────────────────────────────────
+  nextcloud:
+    image: nextcloud:28-apache
+    container_name: jarvis-nextcloud
+    restart: unless-stopped
+    ports:
+      - "${PORT_NEXTCLOUD:-8080}:80"
+    environment:
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-aakif}
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD}
+      - NEXTCLOUD_TRUSTED_DOMAINS=${NEXTCLOUD_TRUSTED_DOMAINS:-localhost}
+      - MYSQL_HOST=nextcloud-db
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD:-changeme_nc}
+    volumes:
+      - nextcloud-data:/var/www/html
+    depends_on:
+      - nextcloud-db
+
+  nextcloud-db:
+    image: mariadb:10.11
+    container_name: jarvis-nextcloud-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD:-changeme_root}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_PASSWORD:-changeme_nc}
+    volumes:
+      - nextcloud-db:/var/lib/mysql
+
+  # ── Gitea — local git server ─────────────────────────────────────────────
+  gitea:
+    image: gitea/gitea:1.21
+    container_name: jarvis-gitea
+    restart: unless-stopped
+    ports:
+      - "${PORT_GITEA:-3001}:3000"
+      - "2222:22"
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__server__DOMAIN=${DOMAIN:-localhost}
+      - GITEA__server__SSH_DOMAIN=${DOMAIN:-localhost}
+      - GITEA__server__ROOT_URL=https://git.${DOMAIN:-localhost}
+    volumes:
+      - gitea-data:/data
+
+  # ── Nginx Proxy Manager — reverse proxy with SSL ─────────────────────────
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: jarvis-npm
+    restart: unless-stopped
+    ports:
+      - "${PORT_NPM_HTTP:-80}:80"
+      - "${PORT_NPM_HTTPS:-443}:443"
+      - "${PORT_NPM_UI:-81}:81"
+    volumes:
+      - npm-data:/data
+      - npm-letsencrypt:/etc/letsencrypt
+
+  # ── Portainer — Docker management UI ────────────────────────────────────
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: jarvis-portainer
+    restart: unless-stopped
+    ports:
+      - "${PORT_PORTAINER:-9000}:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+
+  # ── Uptime Kuma — service monitoring ────────────────────────────────────
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: jarvis-uptime
+    restart: unless-stopped
+    ports:
+      - "${PORT_KUMA:-3002}:3001"
+    volumes:
+      - uptime-kuma-data:/app/data
+
+volumes:
+  open-webui-data:
+  qdrant-data:
+  whisper-models:
+  nextcloud-data:
+  nextcloud-db:
+  gitea-data:
+  npm-data:
+  npm-letsencrypt:
+  portainer-data:
+  uptime-kuma-data:
