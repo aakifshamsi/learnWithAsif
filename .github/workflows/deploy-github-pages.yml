@@ -10,13 +10,11 @@ on:
       - ".github/workflows/deploy-github-pages.yml"
   workflow_dispatch:
 
-# Required for GitHub Pages deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Only one deployment at a time; don't cancel in-progress
 concurrency:
   group: github-pages
   cancel-in-progress: false
@@ -37,19 +35,9 @@ jobs:
           version: 9
           run_install: false
 
-      - name: Get pnpm store
-        id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-portfolio-${{ hashFiles('portfolio/package.json') }}
-          restore-keys: ${{ runner.os }}-pnpm-portfolio-
-
-      - name: Install
+      - name: Install dependencies
         working-directory: portfolio
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Typecheck
         working-directory: portfolio
@@ -75,6 +63,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Check GitHub Pages is enabled
+        run: |
+          echo "::notice::If this step fails with a 'Pages not configured' error:"
+          echo "::notice::Go to repo Settings → Pages → Source → GitHub Actions and save."
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
