@@ -4,11 +4,20 @@ const NODES = [
   {
     sub: 'aakif',
     label: 'aakif.sham.si',
-    href: 'https://aakif.sham.si',
+    href: 'https://aakifshamsi.github.io/learnWithAsif/',
     desc: 'Personal profile · Builder & Cloud Architect',
     status: 'live',
     icon: '👤',
     color: '#00d4ff',
+  },
+  {
+    sub: 'elecai',
+    label: 'ElecAI',
+    href: 'https://github.com/aakifshamsi/learnWithAsif',
+    desc: 'India Elections live dashboard · free public service · sham.si ecosystem',
+    status: 'live',
+    icon: '🗳️',
+    color: '#10b981',
   },
   {
     sub: 'lab',
@@ -71,7 +80,7 @@ export default function App() {
       </div>
 
       {/* Node grid */}
-      <div className="relative z-10 grid sm:grid-cols-2 gap-4 w-full max-w-2xl slide-in-2">
+      <div className="relative z-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl slide-in-2">
         {NODES.map((node, i) => (
           <NodeCard
             key={node.sub}

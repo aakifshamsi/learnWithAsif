@@ -10,10 +10,11 @@ const PROJECTS = [
     status: 'live',
     statusColor: 'text-green-400 border-green-400/30 bg-green-400/5',
     description:
-      'Real-time ECI constituency trends for all 543 Lok Sabha seats. Monte Carlo seat predictions (10k simulations per tick with Box-Muller Gaussian noise). Vote recording with EPIC # validation and SHA-256 privacy. Cloudflare Workers AI narrative generation. WebSocket-driven live updates via Durable Objects.',
+      'Real-time ECI constituency trends for all 543 Lok Sabha seats. Monte Carlo seat predictions (10k simulations per tick with Box-Muller Gaussian noise). Vote recording with EPIC # validation and SHA-256 privacy. Cloudflare Workers AI narrative generation. WebSocket-driven live updates via Durable Objects. Part of the sham.si open-tools ecosystem — free public service, sponsorship-supported.',
     tech: ['Cloudflare Workers', 'Hono.js', 'D1 SQLite', 'KV', 'R2', 'Durable Objects', 'CF Workers AI', 'React 18', 'Plotly.js', 'Vite'],
     links: [
       { label: 'GitHub', href: 'https://github.com/aakifshamsi/learnWithAsif', icon: '⟨/⟩' },
+      { label: 'sham.si ecosystem', href: 'https://sham.si', icon: '🌐' },
     ],
     highlight: true,
     icon: '🗳️',
